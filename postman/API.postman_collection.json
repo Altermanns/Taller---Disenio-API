@@ -1,0 +1,560 @@
+{
+	"info": {
+		"_postman_id": "a93c4e12-78d1-4f11-9231-89d42171acb4",
+		"name": "Academic Enrollment API",
+		"description": "Colección de Postman para pruebas del contrato de integración de la API de Matrículas Académicas (ISWZ3104 - Semana 3). Contiene las operaciones y ejemplos de respuesta definidos en la especificación OpenAPI.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Registrar Matrícula (POST /enrollments)",
+			"event": [],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"periodId\": \"{{periodId}}\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    },\n    {\n      \"courseCode\": \"ISWZ-3105\",\n      \"group\": \"G2\",\n      \"credits\": 4\n    }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/enrollments",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"enrollments"
+					]
+				},
+				"description": "Permite al Portal Estudiantil registrar una nueva matrícula formal para un alumno en un período académico."
+			},
+			"response": [
+				{
+					"name": "201 Created - Matrícula registrada con éxito",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    },\n    {\n      \"courseCode\": \"ISWZ-3105\",\n      \"group\": \"G2\",\n      \"credits\": 4\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Location",
+							"value": "/api/v1/enrollments/ENR-2026-8912"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": \"ENR-2026-8912\",\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"status\": \"CONFIRMED\",\n  \"totalCredits\": 7,\n  \"registeredAt\": \"2026-02-15T09:30:00Z\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"courseName\": \"Integración de Sistemas\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    },\n    {\n      \"courseCode\": \"ISWZ-3105\",\n      \"courseName\": \"Arquitectura de Software\",\n      \"group\": \"G2\",\n      \"credits\": 4\n    }\n  ]\n}"
+				},
+				{
+					"name": "409 Conflict - Matrícula duplicada en el periodo",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					},
+					"status": "Conflict",
+					"code": 409,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"code\": \"DUPLICATE_ENROLLMENT\",\n  \"message\": \"El estudiante EST-89421 ya cuenta con una matrícula registrada y activa para el período 2026-1.\",\n  \"correlationId\": \"e2b1049c-8fa2-43d9-a721-99cb340e11a2\",\n  \"timestamp\": \"2026-02-15T09:30:02Z\"\n}"
+				},
+				{
+					"name": "422 Unprocessable Entity - Prerrequisito no cumplido",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"code\": \"PREREQUISITE_NOT_MET\",\n  \"message\": \"El estudiante no cumple con el prerrequisito para la asignatura ISWZ-3104 (requiere ISWZ-2102 aprobada).\",\n  \"correlationId\": \"f7d2b4a1-89c3-4e2b-a192-38b4d91209c1\",\n  \"timestamp\": \"2026-02-15T09:30:03Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "2. Consultar Matrícula por ID (GET /enrollments/{enrollmentId})",
+			"event": [],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/enrollments/:enrollmentId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"enrollments",
+						":enrollmentId"
+					],
+					"variable": [
+						{
+							"key": "enrollmentId",
+							"value": "{{enrollmentId}}",
+							"description": "Identificador único de la matrícula"
+						}
+					]
+				},
+				"description": "Consulta el detalle y estado de una matrícula específica usando su identificador en el path."
+			},
+			"response": [
+				{
+					"name": "200 OK - Detalle de matrícula encontrado",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/ENR-2026-8912",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"ENR-2026-8912"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": \"ENR-2026-8912\",\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"status\": \"CONFIRMED\",\n  \"totalCredits\": 7,\n  \"registeredAt\": \"2026-02-15T09:30:00Z\",\n  \"courses\": [\n    {\n      \"courseCode\": \"ISWZ-3104\",\n      \"courseName\": \"Integración de Sistemas\",\n      \"group\": \"G1\",\n      \"credits\": 3\n    },\n    {\n      \"courseCode\": \"ISWZ-3105\",\n      \"courseName\": \"Arquitectura de Software\",\n      \"group\": \"G2\",\n      \"credits\": 4\n    }\n  ]\n}"
+				},
+				{
+					"name": "404 Not Found - Matrícula no existe",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/ENR-2026-9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"ENR-2026-9999"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"code\": \"ENROLLMENT_NOT_FOUND\",\n  \"message\": \"No se encontró ningún registro de matrícula con el identificador 'ENR-2026-9999'.\",\n  \"correlationId\": \"3311aa88-22bb-44cc-88dd-998877665544\",\n  \"timestamp\": \"2026-02-15T09:32:01Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "3. Buscar Matrículas por Filtros (GET /enrollments?studentId=&periodId=)",
+			"event": [],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/enrollments?studentId={{studentId}}&periodId={{periodId}}&status=CONFIRMED",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"enrollments"
+					],
+					"query": [
+						{
+							"key": "studentId",
+							"value": "{{studentId}}",
+							"description": "Filtro obligatorio por identificador de estudiante"
+						},
+						{
+							"key": "periodId",
+							"value": "{{periodId}}",
+							"description": "Filtro opcional por periodo académico"
+						},
+						{
+							"key": "status",
+							"value": "CONFIRMED",
+							"description": "Filtro opcional por estado (PENDING, CONFIRMED, CANCELLED)"
+						}
+					]
+				},
+				"description": "Busca y lista matrículas de un estudiante específico en un período lectivo."
+			},
+			"response": [
+				{
+					"name": "200 OK - Lista de matrículas encontradas",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?studentId=EST-89421&periodId=2026-1&status=CONFIRMED",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							],
+							"query": [
+								{
+									"key": "studentId",
+									"value": "EST-89421"
+								},
+								{
+									"key": "periodId",
+									"value": "2026-1"
+								},
+								{
+									"key": "status",
+									"value": "CONFIRMED"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "[\n  {\n    \"id\": \"ENR-2026-8912\",\n    \"studentId\": \"EST-89421\",\n    \"periodId\": \"2026-1\",\n    \"status\": \"CONFIRMED\",\n    \"totalCredits\": 7,\n    \"registeredAt\": \"2026-02-15T09:30:00Z\",\n    \"courses\": [\n      {\n        \"courseCode\": \"ISWZ-3104\",\n        \"courseName\": \"Integración de Sistemas\",\n        \"group\": \"G1\",\n        \"credits\": 3\n      },\n      {\n        \"courseCode\": \"ISWZ-3105\",\n        \"courseName\": \"Arquitectura de Software\",\n        \"group\": \"G2\",\n        \"credits\": 4\n      }\n    ]\n  }\n]"
+				},
+				{
+					"name": "400 Bad Request - Falta parámetro obligatorio",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"code\": \"MISSING_REQUIRED_QUERY_PARAM\",\n  \"message\": \"El parámetro de consulta 'studentId' es obligatorio para realizar la búsqueda.\",\n  \"correlationId\": \"77aa8921-93bb-4210-b992-12739281a8b9\",\n  \"timestamp\": \"2026-02-15T09:31:00Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "4. Modificar Parcialmente Matrícula (PATCH /enrollments/{enrollmentId})",
+			"event": [],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"status\": \"CANCELLED\",\n  \"remarks\": \"Retiro voluntario de matrícula dentro del período reglamentario.\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/enrollments/:enrollmentId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"enrollments",
+						":enrollmentId"
+					],
+					"variable": [
+						{
+							"key": "enrollmentId",
+							"value": "{{enrollmentId}}",
+							"description": "Identificador de la matrícula a modificar"
+						}
+					]
+				},
+				"description": "Actualiza el estado o ajusta asignaturas de la matrícula sin tener que reenviar el recurso completo."
+			},
+			"response": [
+				{
+					"name": "200 OK - Matrícula actualizada correctamente",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CANCELLED\",\n  \"remarks\": \"Retiro voluntario de matrícula dentro del período reglamentario.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/ENR-2026-8912",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"ENR-2026-8912"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": \"ENR-2026-8912\",\n  \"studentId\": \"EST-89421\",\n  \"periodId\": \"2026-1\",\n  \"status\": \"CANCELLED\",\n  \"totalCredits\": 0,\n  \"registeredAt\": \"2026-02-15T09:30:00Z\",\n  \"courses\": []\n}"
+				},
+				{
+					"name": "422 Unprocessable Entity - Plazo de modificación vencido",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CANCELLED\",\n  \"remarks\": \"Retiro voluntario fuera de plazo.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/ENR-2026-8912",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"ENR-2026-8912"
+							]
+						}
+					},
+					"status": "Unprocessable Entity",
+					"code": 422,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"code\": \"DEADLINE_EXCEEDED\",\n  \"message\": \"El periodo de adición y retiro de materias ha finalizado para el ciclo 2026-1.\",\n  \"correlationId\": \"99aa88bb-77cc-66dd-55ee-44ff33aa22bb\",\n  \"timestamp\": \"2026-02-15T09:33:02Z\"\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "studentId",
+			"value": "EST-89421",
+			"type": "string"
+		},
+		{
+			"key": "periodId",
+			"value": "2026-1",
+			"type": "string"
+		},
+		{
+			"key": "enrollmentId",
+			"value": "ENR-2026-8912",
+			"type": "string"
+		}
+	]
+}

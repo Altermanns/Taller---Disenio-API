@@ -1,0 +1,522 @@
+openapi: 3.0.3
+info:
+  title: Academic Enrollment API
+  version: 1.0.0
+  description: >
+    API REST para la integración entre el Portal de Autoservicio Estudiantil
+    y el Sistema de Registro y Control Académico. Permite registrar matrículas,
+    consultar estado de inscripciones y actualizar asignaturas o estado de la matrícula.
+  contact:
+    name: Equipo de Integración de Sistemas
+    email: soporte-integracion@universidad.edu
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Servidor local de pruebas / desarrollo
+
+tags:
+  - name: Enrollments
+    description: Operaciones sobre el recurso de matrículas académicas
+
+paths:
+  /enrollments:
+    post:
+      tags:
+        - Enrollments
+      summary: Registrar una nueva matrícula académica
+      description: >
+        Permite al portal estudiantil solicitar la inscripción formal de asignaturas
+        para un estudiante en un período académico específico. Valida prerrequisitos,
+        disponibilidad de cupos y límites crediticios.
+      operationId: createEnrollment
+      requestBody:
+        required: true
+        description: Datos necesarios para formalizar la matrícula del estudiante.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnrollmentRequest'
+            example:
+              studentId: "EST-89421"
+              periodId: "2026-1"
+              courses:
+                - courseCode: "ISWZ-3104"
+                  group: "G1"
+                  credits: 3
+                - courseCode: "ISWZ-3105"
+                  group: "G2"
+                  credits: 4
+      responses:
+        '201':
+          description: Matrícula registrada exitosamente.
+          headers:
+            Location:
+              description: URL del nuevo recurso de matrícula creado.
+              schema:
+                type: string
+                example: "/api/v1/enrollments/ENR-2026-8912"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+              example:
+                id: "ENR-2026-8912"
+                studentId: "EST-89421"
+                periodId: "2026-1"
+                status: "CONFIRMED"
+                totalCredits: 7
+                registeredAt: "2026-02-15T09:30:00Z"
+                courses:
+                  - courseCode: "ISWZ-3104"
+                    courseName: "Integración de Sistemas"
+                    group: "G1"
+                    credits: 3
+                  - courseCode: "ISWZ-3105"
+                    courseName: "Arquitectura de Software"
+                    group: "G2"
+                    credits: 4
+        '400':
+          description: Solicitud inválida (errores de formato o campos obligatorios faltantes).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_REQUEST_PAYLOAD"
+                message: "El campo 'studentId' es obligatorio y debe tener el formato EST-XXXXX."
+                correlationId: "8f42a19c-3b1a-4d92-bf39-2a91283c4101"
+                timestamp: "2026-02-15T09:30:01Z"
+        '409':
+          description: Conflicto de negocio (el estudiante ya tiene una matrícula activa en el periodo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "DUPLICATE_ENROLLMENT"
+                message: "El estudiante EST-89421 ya cuenta con una matrícula registrada y activa para el período 2026-1."
+                correlationId: "e2b1049c-8fa2-43d9-a721-99cb340e11a2"
+                timestamp: "2026-02-15T09:30:02Z"
+        '422':
+          description: Entidad no procesable (fallo en reglas de negocio como prerrequisitos o cupos).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "PREREQUISITE_NOT_MET"
+                message: "El estudiante no cumple con el prerrequisito para la asignatura ISWZ-3104 (requiere ISWZ-2102 aprobada)."
+                correlationId: "f7d2b4a1-89c3-4e2b-a192-38b4d91209c1"
+                timestamp: "2026-02-15T09:30:03Z"
+        '500':
+          description: Error interno del sistema proveedor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INTERNAL_SERVER_ERROR"
+                message: "Ocurrió una falla inesperada en el servicio de registro académico."
+                correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+                timestamp: "2026-02-15T09:30:04Z"
+
+    get:
+      tags:
+        - Enrollments
+      summary: Consultar matrículas con filtros
+      description: >
+        Permite buscar y listar matrículas filtrando por estudiante y período académico.
+      operationId: getEnrollments
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          description: Identificador del estudiante para filtrar sus matrículas.
+          schema:
+            type: string
+            example: "EST-89421"
+        - name: periodId
+          in: query
+          required: false
+          description: Código del período lectivo a consultar.
+          schema:
+            type: string
+            example: "2026-1"
+        - name: status
+          in: query
+          required: false
+          description: Filtrar por estado de la matrícula.
+          schema:
+            $ref: '#/components/schemas/EnrollmentStatus'
+            example: "CONFIRMED"
+      responses:
+        '200':
+          description: Lista de matrículas encontradas que cumplen los criterios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrollmentResponse'
+              example:
+                - id: "ENR-2026-8912"
+                  studentId: "EST-89421"
+                  periodId: "2026-1"
+                  status: "CONFIRMED"
+                  totalCredits: 7
+                  registeredAt: "2026-02-15T09:30:00Z"
+                  courses:
+                    - courseCode: "ISWZ-3104"
+                      courseName: "Integración de Sistemas"
+                      group: "G1"
+                      credits: 3
+                    - courseCode: "ISWZ-3105"
+                      courseName: "Arquitectura de Software"
+                      group: "G2"
+                      credits: 4
+        '400':
+          description: Parámetros de consulta incorrectos o incompletos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "MISSING_REQUIRED_QUERY_PARAM"
+                message: "El parámetro de consulta 'studentId' es obligatorio para realizar la búsqueda."
+                correlationId: "77aa8921-93bb-4210-b992-12739281a8b9"
+                timestamp: "2026-02-15T09:31:00Z"
+        '500':
+          description: Error interno del sistema.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INTERNAL_SERVER_ERROR"
+                message: "Ocurrió una falla inesperada en el servicio de registro académico."
+                correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+                timestamp: "2026-02-15T09:31:01Z"
+
+  /enrollments/{enrollmentId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Consultar una matrícula específica por su identificador
+      description: >
+        Obtiene el detalle completo de una matrícula académica mediante su ID único.
+      operationId: getEnrollmentById
+      parameters:
+        - name: enrollmentId
+          in: path
+          required: true
+          description: Identificador único de la matrícula.
+          schema:
+            type: string
+            example: "ENR-2026-8912"
+      responses:
+        '200':
+          description: Detalle de la matrícula recuperada con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+              example:
+                id: "ENR-2026-8912"
+                studentId: "EST-89421"
+                periodId: "2026-1"
+                status: "CONFIRMED"
+                totalCredits: 7
+                registeredAt: "2026-02-15T09:30:00Z"
+                courses:
+                  - courseCode: "ISWZ-3104"
+                    courseName: "Integración de Sistemas"
+                    group: "G1"
+                    credits: 3
+                  - courseCode: "ISWZ-3105"
+                    courseName: "Arquitectura de Software"
+                    group: "G2"
+                    credits: 4
+        '400':
+          description: Formato inválido del identificador en la ruta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_IDENTIFIER_FORMAT"
+                message: "El parámetro de ruta 'enrollmentId' debe cumplir el formato ENR-AAAA-XXXX."
+                correlationId: "bb33cc12-44dd-55ee-66ff-77889900aabb"
+                timestamp: "2026-02-15T09:32:00Z"
+        '404':
+          description: La matrícula solicitada no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ENROLLMENT_NOT_FOUND"
+                message: "No se encontró ningún registro de matrícula con el identificador 'ENR-2026-9999'."
+                correlationId: "3311aa88-22bb-44cc-88dd-998877665544"
+                timestamp: "2026-02-15T09:32:01Z"
+        '500':
+          description: Error inesperado en el servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INTERNAL_SERVER_ERROR"
+                message: "Falla temporal al consultar el repositorio de matrículas."
+                correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+                timestamp: "2026-02-15T09:32:02Z"
+
+    patch:
+      tags:
+        - Enrollments
+      summary: Modificar parcialmente una matrícula existente
+      description: >
+        Permite actualizar el estado de una matrícula (ej. cancelar o confirmar)
+        o solicitar la adición/retiro de asignaturas sin necesidad de reenviar
+        todo el recurso.
+      operationId: updateEnrollment
+      parameters:
+        - name: enrollmentId
+          in: path
+          required: true
+          description: Identificador de la matrícula a modificar.
+          schema:
+            type: string
+            example: "ENR-2026-8912"
+      requestBody:
+        required: true
+        description: Campos específicos que se desean actualizar en la matrícula.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEnrollmentRequest'
+            example:
+              status: "CANCELLED"
+              remarks: "Retiro voluntario de matrícula dentro del período reglamentario."
+      responses:
+        '200':
+          description: Matrícula modificada exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+              example:
+                id: "ENR-2026-8912"
+                studentId: "EST-89421"
+                periodId: "2026-1"
+                status: "CANCELLED"
+                totalCredits: 0
+                registeredAt: "2026-02-15T09:30:00Z"
+                courses: []
+        '400':
+          description: Datos de modificación inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_UPDATE_PAYLOAD"
+                message: "No se proporcionó ningún campo modificable válido en la solicitud."
+                correlationId: "4422bb11-8899-aabb-ccdd-eeff00112233"
+                timestamp: "2026-02-15T09:33:00Z"
+        '404':
+          description: Matrícula no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "ENROLLMENT_NOT_FOUND"
+                message: "No se encontró ningún registro de matrícula con el identificador 'ENR-2026-9999'."
+                correlationId: "3311aa88-22bb-44cc-88dd-998877665544"
+                timestamp: "2026-02-15T09:33:01Z"
+        '422':
+          description: Violación de reglas de negocio para la modificación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "DEADLINE_EXCEEDED"
+                message: "El periodo de adición y retiro de materias ha finalizado para el ciclo 2026-1."
+                correlationId: "99aa88bb-77cc-66dd-55ee-44ff33aa22bb"
+                timestamp: "2026-02-15T09:33:02Z"
+        '500':
+          description: Error interno del sistema.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INTERNAL_SERVER_ERROR"
+                message: "Falla temporal al actualizar el registro de matrícula."
+                correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+                timestamp: "2026-02-15T09:33:03Z"
+
+components:
+  schemas:
+    EnrollmentStatus:
+      type: string
+      description: Estado de ciclo de vida de la matrícula académica.
+      enum:
+        - PENDING
+        - CONFIRMED
+        - CANCELLED
+
+    EnrollmentCourseItem:
+      type: object
+      description: Datos básicos de una asignatura a inscribir.
+      required:
+        - courseCode
+        - group
+        - credits
+      properties:
+        courseCode:
+          type: string
+          description: Código alfanumérico único de la asignatura.
+          example: "ISWZ-3104"
+        group:
+          type: string
+          description: Identificador del grupo o paralelo asignado.
+          example: "G1"
+        credits:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Cantidad de créditos académicos de la materia.
+          example: 3
+
+    EnrollmentCourseDetail:
+      type: object
+      description: Detalle consolidado de una asignatura matriculada.
+      required:
+        - courseCode
+        - courseName
+        - group
+        - credits
+      properties:
+        courseCode:
+          type: string
+          description: Código alfanumérico de la asignatura.
+          example: "ISWZ-3104"
+        courseName:
+          type: string
+          description: Nombre descriptivo de la asignatura.
+          example: "Integración de Sistemas"
+        group:
+          type: string
+          description: Grupo asignado.
+          example: "G1"
+        credits:
+          type: integer
+          description: Créditos asignados a la asignatura.
+          example: 3
+
+    CreateEnrollmentRequest:
+      type: object
+      description: Estructura del cuerpo de solicitud para registrar una nueva matrícula.
+      required:
+        - studentId
+        - periodId
+        - courses
+      properties:
+        studentId:
+          type: string
+          description: Identificador institucional del estudiante.
+          example: "EST-89421"
+        periodId:
+          type: string
+          description: Período académico en el que se matricula.
+          example: "2026-1"
+        courses:
+          type: array
+          minItems: 1
+          description: Lista de asignaturas que el estudiante desea matricular.
+          items:
+            $ref: '#/components/schemas/EnrollmentCourseItem'
+
+    UpdateEnrollmentRequest:
+      type: object
+      description: Estructura del cuerpo para modificación parcial de la matrícula.
+      properties:
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        remarks:
+          type: string
+          description: Motivo o justificación de la actualización.
+          example: "Retiro voluntario de matrícula dentro del período reglamentario."
+        courses:
+          type: array
+          description: Nueva lista consolidada de asignaturas en caso de ajuste.
+          items:
+            $ref: '#/components/schemas/EnrollmentCourseItem'
+
+    EnrollmentResponse:
+      type: object
+      description: Representación canónica del recurso de matrícula académica.
+      required:
+        - id
+        - studentId
+        - periodId
+        - status
+        - totalCredits
+        - registeredAt
+        - courses
+      properties:
+        id:
+          type: string
+          description: Identificador unívoco del registro de matrícula.
+          example: "ENR-2026-8912"
+        studentId:
+          type: string
+          description: Identificador del estudiante asociado.
+          example: "EST-89421"
+        periodId:
+          type: string
+          description: Período académico correspondiente.
+          example: "2026-1"
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        totalCredits:
+          type: integer
+          description: Suma total de créditos matriculados.
+          example: 7
+        registeredAt:
+          type: string
+          format: date-time
+          description: Fecha y hora en formato ISO 8601 del registro de la matrícula.
+          example: "2026-02-15T09:30:00Z"
+        courses:
+          type: array
+          description: Listado de materias inscritas con sus datos detallados.
+          items:
+            $ref: '#/components/schemas/EnrollmentCourseDetail'
+
+    ErrorResponse:
+      type: object
+      description: Estructura estándar y consistente para reportar cualquier error en la API.
+      required:
+        - code
+        - message
+        - correlationId
+      properties:
+        code:
+          type: string
+          description: Código nemotécnico o código de negocio que categoriza el error específico.
+          example: "PREREQUISITE_NOT_MET"
+        message:
+          type: string
+          description: Mensaje descriptivo y legible para el desarrollador que explica la causa del error.
+          example: "El estudiante no cumple con el prerrequisito para la asignatura ISWZ-3104 (requiere ISWZ-2102 aprobada)."
+        correlationId:
+          type: string
+          description: Identificador único de rastreo para trazabilidad y auditoría entre sistemas distribuidos.
+          example: "f7d2b4a1-89c3-4e2b-a192-38b4d91209c1"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo en la que ocurrió el incidente en el servidor.
+          example: "2026-10-26T17:30:00Z"
