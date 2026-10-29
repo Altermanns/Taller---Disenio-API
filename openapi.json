@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8080/api/v1",
+      "url": "http://localhost:8080",
       "description": "Servidor local de pruebas / desarrollo"
     }
   ],
@@ -22,7 +22,7 @@
     }
   ],
   "paths": {
-    "/enrollments": {
+    "/api/v1/enrollments": {
       "post": {
         "tags": [
           "Enrollments"
@@ -276,7 +276,7 @@
         }
       }
     },
-    "/enrollments/{enrollmentId}": {
+    "/api/v1/enrollments/{enrollmentId}": {
       "get": {
         "tags": [
           "Enrollments"
@@ -499,6 +499,12 @@
           }
         }
       }
+    },
+    "/enrollments": {
+      "$ref": "#/paths/~1api~1v1~1enrollments"
+    },
+    "/enrollments/{enrollmentId}": {
+      "$ref": "#/paths/~1api~1v1~1enrollments~1{enrollmentId}"
     }
   },
   "components": {

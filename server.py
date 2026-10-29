@@ -57,9 +57,17 @@ class EnrollmentAPIHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             return None
 
+    def _normalize_path(self, raw_path):
+        if raw_path.startswith("/api/v1/"):
+            return raw_path
+        if raw_path == "/enrollments" or raw_path.startswith("/enrollments/"):
+            return f"/api/v1{raw_path}"
+        return raw_path
+
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path != "/api/v1/enrollments":
+        path = self._normalize_path(parsed.path)
+        if path != "/api/v1/enrollments":
             return self._send_error_model(404, "ENDPOINT_NOT_FOUND", f"La ruta '{parsed.path}' no existe.")
 
         data = self._read_json_body()
@@ -127,7 +135,7 @@ class EnrollmentAPIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        path = parsed.path
+        path = self._normalize_path(parsed.path)
 
         # 1. GET /api/v1/enrollments?studentId=...&periodId=...
         if path == "/api/v1/enrollments":
@@ -215,7 +223,7 @@ class EnrollmentAPIHandler(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         parsed = urlparse(self.path)
-        path = parsed.path
+        path = self._normalize_path(parsed.path)
 
         if not path.startswith("/api/v1/enrollments/"):
             return self._send_error_model(404, "ENDPOINT_NOT_FOUND", f"La ruta '{path}' no existe.")

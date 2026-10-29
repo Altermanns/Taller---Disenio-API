@@ -10,7 +10,7 @@ info:
     name: Equipo de Integración de Sistemas
     email: soporte-integracion@universidad.edu
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://localhost:8080
     description: Servidor local de pruebas / desarrollo
 
 tags:
@@ -18,7 +18,7 @@ tags:
     description: Operaciones sobre el recurso de matrículas académicas
 
 paths:
-  /enrollments:
+  /api/v1/enrollments:
     post:
       tags:
         - Enrollments
@@ -196,7 +196,7 @@ paths:
                 correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
                 timestamp: "2026-02-15T09:31:01Z"
 
-  /enrollments/{enrollmentId}:
+  /api/v1/enrollments/{enrollmentId}:
     get:
       tags:
         - Enrollments
@@ -355,6 +355,12 @@ paths:
                 message: "Falla temporal al actualizar el registro de matrícula."
                 correlationId: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
                 timestamp: "2026-02-15T09:33:03Z"
+
+  /enrollments:
+    $ref: '#/paths/~1api~1v1~1enrollments'
+
+  /enrollments/{enrollmentId}:
+    $ref: '#/paths/~1api~1v1~1enrollments~1{enrollmentId}'
 
 components:
   schemas:
